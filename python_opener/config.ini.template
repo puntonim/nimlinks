@@ -1,0 +1,8 @@
+[remote-lan]
+test = ping -t 10 -c 10 -o mynasname.local 2> /dev/null
+mount = osascript -e 'mount volume "afp://mynasname.local/home"'
+root = /Volumes/home/MYOFFSYNCDOCS
+
+[remote-wan]
+test = nc -w 10 -vz mynasname.synology.me 5006 2> /dev/null
+mount = osascript -e 'mount volume "https://mynasname.synology.me:5006/home"'
