@@ -147,9 +147,9 @@ class _NimAutoLinkHandler(LinkHandler):
         lantest_cmd = config.get('remote-lan', 'test-cmd')
         wantest_cmd = config.get('remote-wan', 'test-cmd')
 
-        if subprocess.call(lantest_cmd, shell=True) == 0:  # In LAN.
+        if subprocess.call(lantest_cmd, shell=True, stderr=subprocess.PIPE) == 0:  # In LAN.
             mount_cmd = config.get('remote-lan', 'mount-cmd')
-        elif subprocess.call(wantest_cmd, shell=True) == 0:  # In WAN.
+        elif subprocess.call(wantest_cmd, shell=True, stderr=subprocess.PIPE) == 0:  # In WAN.
             mount_cmd = config.get('remote-wan', 'mount-cmd')
         else:
             self._exit_with_error_msg('Not able to reach the remote location via LAN nor WAN')
