@@ -130,6 +130,11 @@ class _NimAutoLinkHandler(LinkHandler):
 
     def _get_relative_path(self):
         local_root = config.get('main', 'local-root')
+        # Ensure the .nimautolink file is placed in the right dir.
+        if not self.path.startswith(local_root):
+            self._exit_with_error_msg('This {} file is not placed in the configured local root: {}'.format(
+                self.path, local_root))
+
         relative_path = self.path[len(local_root):]
         # Remove initial /.
         if relative_path.startswith('/'):
