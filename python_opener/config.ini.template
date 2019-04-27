@@ -1,8 +1,16 @@
+[main]
+local_mount_point = /Volumes/home/MYOFFSYNCDOCS
+local-root = /Users/me/SynologyDrive/DOCUMENTS
+# open   -R, --reveal      Selects in the Finder instead of opening.
+open-local-file-cmd = open -R "{}"
+open-local-dir-cmd = open "{}"
+
+
 [remote-lan]
-test = ping -t 10 -c 10 -o mynasname.local 2> /dev/null
-mount = osascript -e 'mount volume "afp://mynasname.local/home"'
-root = /Volumes/home/MYOFFSYNCDOCS
+test_cmd = ping -t 10 -c 10 -o mynasname.local 2> /dev/null
+mount_cmd = osascript -e 'mount volume "afp://mynasname.local/home"'
+
 
 [remote-wan]
-test = nc -w 10 -vz mynasname.synology.me 5006 2> /dev/null
-mount = osascript -e 'mount volume "https://mynasname.synology.me:5006/home"'
+test_cmd = nc -w 10 -vz mynasname.synology.me 5006 2> /dev/null
+mount_cmd = osascript -e 'mount volume "https://mynasname.synology.me:5006/home"'

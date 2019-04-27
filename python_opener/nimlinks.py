@@ -26,12 +26,10 @@ except ImportError:
 LINK_EXT = '.nimlink'
 AUTOLINK_EXT = '.nimautolink'
 
-CMD_OPEN_LOCAL_FILE = 'open -R "{}"'  # -R, --reveal      Selects in the Finder instead of opening.
-CMD_OPEN_LOCAL_DIR = 'open "{}"'
-
 
 class _ConfigLazy(object):
-    def _get_config(self):
+    @staticmethod
+    def _get_config():
         dirpath = os.path.dirname(os.path.realpath(__file__))
         configpath = os.path.join(dirpath, 'config.ini')
         config = ConfigParser()
@@ -71,60 +69,96 @@ def parse_args():
     return link_file
 
 
-def handle_nimlink(link_file):
-    """
-    Handle .nimlink files in macOS. Open Finder at the location written in the .nimlink file.
-    """
-    target_path = linecache.getline(link_file, 1)
-    if not target_path:
-        print('{} is not a valid {} file'.format(link_file, LINK_EXT), file=sys.stderr)
+class LinkHandler(object):
+    def __init__(self, path):
+        self.path = path
+
+    @staticmethod
+    def create_handle(path):
+        """
+        Factory method.
+        """
+        if path.endswith(LINK_EXT):
+            return _NimLinkHandler(path)
+        elif link_file.endswith(AUTOLINK_EXT):
+            return _NimAutoLinkHandler(path)
+
+    def _open_local_file(self, local_path):
+        # Ensure path is a valid file/dir.
+        if os.path.isfile(local_path):
+            cmd = config.get('main', 'open-local-file-cmd')
+        elif os.path.isdir(local_path):
+            cmd = config.get('main', 'open-local-dir-cmd')
+        else:
+            self._exit_with_error_msg('{} is not a valid local file/dir'.format(local_path))
+        subprocess.check_call(cmd.format(local_path), shell=True)
+
+    @staticmethod
+    def _exit_with_error_msg(msg):
+        print(msg, file=sys.stderr)
         sys.exit(1)
 
-    _open_local_file(target_path.strip())
+
+class _NimLinkHandler(LinkHandler):
+    """
+    Handle .nimlink files in macOS.
+    TODO
+    """
+    def handle(self):
+        target_path = linecache.getline(self.path, 1)
+        if not target_path:
+            self._exit_with_error_msg('{} is not a valid {} file'.format(self.path, LINK_EXT))
+
+        self._open_local_file(target_path.strip())
 
 
-def _open_local_file(path):
-    # Ensure path is a valid file/dir.
-    if os.path.isfile(path):
-        cmd = CMD_OPEN_LOCAL_FILE
-    elif os.path.isdir(path):
-        cmd = CMD_OPEN_LOCAL_DIR
-    else:
-        print('{} is not a valid local file/dir'.format(path), file=sys.stderr)
-        sys.exit(1)
-    subprocess.check_call(cmd.format(path), shell=True)
+class _NimAutoLinkHandler(LinkHandler):
+    """
+    Handle .nimautolink files in macOS.
+    TODO
+    """
+    def handle(self):
+        local_mount_point = config.get('main', 'local-mount-point')
+        relative_path = self._get_relative_path()
 
+        # Ensure is not already mounted.
+        if not os.path.isdir(local_mount_point):
+            self._mount_remote()
 
-def handle_nimautolink(link_file):
-    # Check if the root is already mounted.
-    mount_root = config.get('remote-lan', 'root')
-    if not os.path.isdir(mount_root):
-        lantest_cmd = config.get('remote-lan', 'test')
-        wantest_cmd = config.get('remote-wan', 'test')
+        full_path = os.path.join(local_mount_point, relative_path)
+        self._open_local_file(full_path)
+
+    def _get_relative_path(self):
+        local_root = config.get('main', 'local-root')
+        relative_path = self.path[len(local_root):]
+        # Remove initial /.
+        if relative_path.startswith('/'):
+            relative_path = relative_path[1:]
+        # Remove file extension.
+        relative_path = relative_path[:-len(AUTOLINK_EXT)]
+        return relative_path
+
+    def _mount_remote(self):
+        lantest_cmd = config.get('remote-lan', 'test-cmd')
+        wantest_cmd = config.get('remote-wan', 'test-cmd')
 
         if subprocess.call(lantest_cmd, shell=True) == 0:  # In LAN.
-            mount_cmd = config.get('remote-lan', 'mount')
+            mount_cmd = config.get('remote-lan', 'mount-cmd')
         elif subprocess.call(wantest_cmd, shell=True) == 0:  # In WAN.
-            mount_cmd = config.get('remote-wan', 'mount')
+            mount_cmd = config.get('remote-wan', 'mount-cmd')
         else:
-            print('Not able to reach the remote location via LAN nor WAN', file=sys.stderr)
-            sys.exit(1)
+            self._exit_with_error_msg('Not able to reach the remote location via LAN nor WAN')
 
         # Mount.
         subprocess.check_call(mount_cmd, shell=True)
-
-    relative_path = 'IT/ROUTER, WIFI, ADSL/ADSL/2006-2009 ARUBA.zip'  # TODO compute it!
-    _open_local_file(os.path.join(mount_root, relative_path))
 
 
 if __name__ == '__main__':
     print(' * NIMLINKS')
 
     link_file = parse_args()
-    if link_file.endswith(LINK_EXT):
-        handle_nimlink(link_file)
-    elif link_file.endswith(AUTOLINK_EXT):
-        handle_nimautolink(link_file)
+    handler = LinkHandler.create_handle(link_file)
+    handler.handle()
 
     print(' * DONE')
     sys.exit(0)
