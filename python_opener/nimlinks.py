@@ -47,14 +47,16 @@ class _ConfigParserLazy(object):
             exit_with_error_msg('{}\'s content is not in the right format'.format(self.path))
         return config_parser
 
-    def get(self, section, name):
+    def get(self, section, name, is_bool=False):
         # Lazily loading the config file.
         if not self._config_parser:
             self._config_parser = self._get_config_parser()
 
         try:
+            if is_bool:
+                return self._config_parser.getboolean(section, name)
             return self._get_item(section, name)
-        except (NoOptionError, NoSectionError):
+        except (NoOptionError, NoSectionError, KeyError):
             exit_with_error_msg('Attribute "[{}] {}" missing in {}'.format(section, name, self.path))
 
     def _get_item(self, section, name):
@@ -105,7 +107,8 @@ class LinkHandler(object):
         elif link_file.endswith(AUTOLINK_EXT):
             return _NimAutoLinkHandler(path)
 
-    def _open_local_file(self, local_path):
+    @staticmethod
+    def _open_local_file(local_path):
         # Ensure path is a valid file/dir.
         if os.path.isfile(local_path):
             cmd = config.get('main', 'open-local-file-cmd')
@@ -115,6 +118,21 @@ class LinkHandler(object):
             exit_with_error_msg('The link points to {} which is not a valid local file/dir'.format(local_path))
         subprocess.check_call(cmd.format(local_path), shell=True)
 
+    @staticmethod
+    def _mount_remote():
+        lantest_cmd = config.get('remote-lan', 'test-cmd')
+        wantest_cmd = config.get('remote-wan', 'test-cmd')
+
+        if subprocess.call(lantest_cmd, shell=True, stderr=subprocess.PIPE) == 0:  # In LAN.
+            mount_cmd = config.get('remote-lan', 'mount-cmd')
+        elif subprocess.call(wantest_cmd, shell=True, stderr=subprocess.PIPE) == 0:  # In WAN.
+            mount_cmd = config.get('remote-wan', 'mount-cmd')
+        else:
+            exit_with_error_msg('Not able to reach the remote location via LAN nor WAN')
+
+        # Mount.
+        subprocess.check_call(mount_cmd, shell=True)
+
 
 class _NimLinkHandler(LinkHandler):
     """
@@ -123,9 +141,14 @@ class _NimLinkHandler(LinkHandler):
     """
     def handle(self):
         parser = _ConfigParserLazy(self.path)
+        is_local = parser.get('target', 'is-local', is_bool=True)
         target_path = parser.get('target', 'local-path')
         if not target_path:
             exit_with_error_msg('{} is not a valid {} file'.format(self.path, LINK_EXT))
+
+        local_mount_point = config.get('main', 'local-mount-point')
+        if not is_local and not os.path.isdir(local_mount_point):
+            self._mount_remote()
 
         self._open_local_file(target_path.strip())
 
@@ -160,20 +183,6 @@ class _NimAutoLinkHandler(LinkHandler):
         # Remove file extension.
         relative_path = relative_path[:-len(AUTOLINK_EXT)]
         return relative_path
-
-    def _mount_remote(self):
-        lantest_cmd = config.get('remote-lan', 'test-cmd')
-        wantest_cmd = config.get('remote-wan', 'test-cmd')
-
-        if subprocess.call(lantest_cmd, shell=True, stderr=subprocess.PIPE) == 0:  # In LAN.
-            mount_cmd = config.get('remote-lan', 'mount-cmd')
-        elif subprocess.call(wantest_cmd, shell=True, stderr=subprocess.PIPE) == 0:  # In WAN.
-            mount_cmd = config.get('remote-wan', 'mount-cmd')
-        else:
-            exit_with_error_msg('Not able to reach the remote location via LAN nor WAN')
-
-        # Mount.
-        subprocess.check_call(mount_cmd, shell=True)
 
 
 if __name__ == '__main__':

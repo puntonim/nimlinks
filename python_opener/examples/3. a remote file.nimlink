@@ -1,0 +1,5 @@
+[target]
+# is-local = false if mounting the remote (defined in config.ini) is required.
+is-local = false
+# If not is-local, then local-path is the local path of the target after the remote has been mounted.
+local-path = /Volumes/home/DOCUMENTI-OFFSYNC/IT/ROUTER, WIFI, ADSL/ADSL/2006-2009 ARUBA.zip
