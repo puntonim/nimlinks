@@ -1,1 +1,5 @@
-/System/Library/Fonts/Helvetica.ttc
+[target]
+# Local = false if mounting the remote (defined in config.ini) is required.
+local = true
+# If local = false, then local-path is the local path of the target after the remote has been mounted.
+local-path = /System/Library/Fonts/Helvetica.ttc

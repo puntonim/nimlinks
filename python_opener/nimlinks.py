@@ -3,9 +3,13 @@
 """
 Open .nimlink and .nimautolink files in macOS.
 
-.nimlink files are text files containing a path that points to a local file.
-.nimautolink files are empty files. Their absolute path points to a remote file. The remote location is configured
-in the config file.
+.nimlink files are text files containing a path that points to a local ore remote file/dir. They are created manually.
+.nimautolink files are empty files. Their absolute path points to a remote file/dir. They are created automatically
+with `python_autolinks_creator`.
+
+The remote location is configured in the config file.
+The remote location is unique (it is a file server, like a NAS) and it can be accessed in different ways
+via LAN (like AFP or SMB) and via WAN (WebDav).
 
 Development:
  - compatible with Python 2 and 3 so that it will work in old and new macOS versions.
@@ -13,41 +17,54 @@ Development:
 """
 from __future__ import print_function
 
-import linecache
 import os
 import sys
 import subprocess
 try:
-    from configparser import ConfigParser  # Python 3.
+    from configparser import ConfigParser, MissingSectionHeaderError, NoOptionError, NoSectionError  # Python 3.
 except ImportError:
-    from ConfigParser import SafeConfigParser as ConfigParser  # Python 2.
+    from ConfigParser import SafeConfigParser as ConfigParser, MissingSectionHeaderError, NoOptionError, NoSectionError  # Python 2.
 
 
 LINK_EXT = '.nimlink'
 AUTOLINK_EXT = '.nimautolink'
 
 
-class _ConfigLazy(object):
-    @staticmethod
-    def _get_config():
-        dirpath = os.path.dirname(os.path.realpath(__file__))
-        configpath = os.path.join(dirpath, 'config.ini')
-        config = ConfigParser()
-        config.read(configpath)
-        return config
+class _ConfigParserLazy(object):
+    def __init__(self, path=None):
+        self.path = path
+        self._config_parser = None
+
+    def _get_config_parser(self):
+        if not self.path:
+            # Then get config.ini.
+            dirpath = os.path.dirname(os.path.realpath(__file__))
+            self.path = os.path.join(dirpath, 'config.ini')
+        config_parser = ConfigParser()
+        try:
+            config_parser.read(self.path)
+        except MissingSectionHeaderError:
+            exit_with_error_msg('{}\'s content is not in the right format'.format(self.path))
+        return config_parser
 
     def get(self, section, name):
         # Lazily loading the config file.
-        if not hasattr(self, '_config'):
-            self._config = self._get_config()
+        if not self._config_parser:
+            self._config_parser = self._get_config_parser()
 
         try:
-            return self._config[section][name]  # Python 3.
+            return self._get_item(section, name)
+        except (NoOptionError, NoSectionError):
+            exit_with_error_msg('Attribute "[{}] {}" missing in {}'.format(section, name, self.path))
+
+    def _get_item(self, section, name):
+        try:
+            return self._config_parser[section][name]  # Python 3.
         except AttributeError:
-            return self._config.get(section, name)  # Python 2.
+            return self._config_parser.get(section, name)  # Python 2.
 
 
-config = _ConfigLazy()
+config = _ConfigParserLazy()
 
 
 def parse_args():
@@ -67,6 +84,11 @@ def parse_args():
         sys.exit(1)
 
     return link_file
+
+
+def exit_with_error_msg(msg):
+    print(msg, file=sys.stderr)
+    sys.exit(1)
 
 
 class LinkHandler(object):
@@ -90,13 +112,8 @@ class LinkHandler(object):
         elif os.path.isdir(local_path):
             cmd = config.get('main', 'open-local-dir-cmd')
         else:
-            self._exit_with_error_msg('{} is not a valid local file/dir'.format(local_path))
+            exit_with_error_msg('The link points to {} which is not a valid local file/dir'.format(local_path))
         subprocess.check_call(cmd.format(local_path), shell=True)
-
-    @staticmethod
-    def _exit_with_error_msg(msg):
-        print(msg, file=sys.stderr)
-        sys.exit(1)
 
 
 class _NimLinkHandler(LinkHandler):
@@ -105,9 +122,10 @@ class _NimLinkHandler(LinkHandler):
     TODO
     """
     def handle(self):
-        target_path = linecache.getline(self.path, 1)
+        parser = _ConfigParserLazy(self.path)
+        target_path = parser.get('target', 'local-path')
         if not target_path:
-            self._exit_with_error_msg('{} is not a valid {} file'.format(self.path, LINK_EXT))
+            exit_with_error_msg('{} is not a valid {} file'.format(self.path, LINK_EXT))
 
         self._open_local_file(target_path.strip())
 
@@ -132,7 +150,7 @@ class _NimAutoLinkHandler(LinkHandler):
         local_root = config.get('main', 'local-root')
         # Ensure the .nimautolink file is placed in the right dir.
         if not self.path.startswith(local_root):
-            self._exit_with_error_msg('This {} file is not placed in the configured local root: {}'.format(
+            exit_with_error_msg('This {} file is not placed in the configured local root: {}'.format(
                 self.path, local_root))
 
         relative_path = self.path[len(local_root):]
@@ -152,7 +170,7 @@ class _NimAutoLinkHandler(LinkHandler):
         elif subprocess.call(wantest_cmd, shell=True, stderr=subprocess.PIPE) == 0:  # In WAN.
             mount_cmd = config.get('remote-wan', 'mount-cmd')
         else:
-            self._exit_with_error_msg('Not able to reach the remote location via LAN nor WAN')
+            exit_with_error_msg('Not able to reach the remote location via LAN nor WAN')
 
         # Mount.
         subprocess.check_call(mount_cmd, shell=True)
