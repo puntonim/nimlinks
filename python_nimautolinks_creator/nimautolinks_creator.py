@@ -5,6 +5,7 @@ TODO
 from __future__ import print_function
 
 import os
+import re
 import subprocess
 import sys
 if hasattr(__builtins__, 'raw_input'):
@@ -27,9 +28,35 @@ def check_remote_offsync_root_content():
     Example:
         valid: /Volumes/home/MYOFFSYNCDOCS/IT/ROUTER/OLD | offsync/FIRMWARE/1897.iso
         invalid: /Volumes/home/MYOFFSYNCDOCS/IT/ROUTER/info.txt
+        invalid: /Volumes/home/MYOFFSYNCDOCS/IT/ROUTER/   - if empty
     """
     print('\n> Checking REMOTE OFFSYNC ROOT dir content...')
-    # TODO
+    remote_offsync_root_mount_path = utils.config.get('main', 'remote-offsync-root-mount-path')
+    # Find all files with no "| offsync" in their full path.
+    cmd = 'find "{}" -type f \! -path "* | offsync*" \! -name "*.DS_Store"'
+    output = subprocess.check_output(cmd.format(remote_offsync_root_mount_path), shell=True)
+    output = output
+
+    # Find all dirs:
+    #  - with no "| offsync" in their full path
+    #  - and with no sub dirs
+    #  - and with no offsync file.
+    cmd = 'find "{}" -type d \! -path "* | offsync*"'
+    dirs_output = subprocess.check_output(cmd.format(remote_offsync_root_mount_path), shell=True)
+    for adir in dirs_output.strip().splitlines():
+        found = False
+        for item in os.listdir(adir):
+            if os.path.isdir(os.path.join(adir, item)) or re.match(r'.* \| offsync\..*', item):
+                found = True
+                break
+        if not found:
+            output += adir
+
+    if output:
+        utils.exit_with_error_msg('ERROR The following files/dirs are not marked as offsync nor nested in a '
+            'offsync dir. Remove them to keep a mirrored structure between REMOTE OFFSYNC ROOT and '
+            'LOCAL SYNC ROOT:\n{}'.format(output))
+
     print('The content is OK')
 
 
@@ -43,7 +70,7 @@ def _find_all_remote_offsync_mounted_files_and_dirs():
 def _find_all_local_sync_nimautolink_files():
     local_sync_root_path = utils.config.get('main', 'local-sync-root-path')
     output = subprocess.check_output(FIND_ALL_LOCAL_SYNC_NIMAUTOLINK_FILES_CMD.format(local_sync_root_path), shell=True)
-    return output
+    return output.strip()
 
 
 def _create_single_local_sync_nimautolink(path):
@@ -118,5 +145,5 @@ if __name__ == '__main__':
     create_all_local_sync_nimautolinks()
     check_all_local_sync_nimautolinks()
 
-    print('No errors - DONE')
+    print('\nNo errors - DONE')
     sys.exit(0)
