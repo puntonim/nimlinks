@@ -56,8 +56,19 @@ config = ConfigParserLazy()
 
 
 def exit_with_error_msg(msg):
-    print(msg, file=sys.stderr)
+    FAILCOL = '\033[91m'
+    ENDCOL = '\033[0m'
+    ERROR = FAILCOL + 'ERROR' + ENDCOL
+    print(ERROR + ' ' + msg, file=sys.stderr)
     sys.exit(1)
+
+
+def print_msg(msg):
+    OKCOL = '\033[92m'
+    ENDCOL = '\033[0m'
+    OK = OKCOL + 'OK' + ENDCOL
+    DONE = OKCOL + 'DONE' + ENDCOL
+    print(msg.replace('OK', OK).replace('DONE', DONE))
 
 
 def mount_remote_offsync_root():

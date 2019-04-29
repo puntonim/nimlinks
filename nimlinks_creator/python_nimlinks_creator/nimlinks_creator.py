@@ -3,8 +3,6 @@
 Create .nimlink files.
 See the format in nimlink.template.
 """
-from __future__ import print_function
-
 import os
 import sys
 from string import Template
@@ -17,11 +15,11 @@ def parse_args():
     try:
         target_path = os.path.abspath(sys.argv[1])
     except IndexError:
-        utils.exit_with_error_msg('Please provide a file/dir as argument', file=sys.stderr)
+        utils.exit_with_error_msg('Please provide a file/dir as argument')
 
     # Ensure the target is a valid file/dir.
     if not os.path.isfile(target_path) and not os.path.isdir(target_path):
-        utils.exit_with_error_msg('Please provide a file or dir as target', file=sys.stderr)
+        utils.exit_with_error_msg('Please provide a file or dir as target')
 
     return target_path
 
@@ -48,12 +46,12 @@ def create_nimlink_file(target_path, content):
 
 
 if __name__ == '__main__':
-    print('NIMLINKS CREATOR')
-    print('================')
+    utils.print_msg('NIMLINKS CREATOR')
+    utils.print_msg('================')
 
     target_path = parse_args()
     content = compute_content(target_path)
     create_nimlink_file(target_path, content)
 
-    print('\nNo errors - DONE')
+    utils.print_msg('\nNo errors - DONE')
     sys.exit(0)

@@ -2,8 +2,6 @@
 """
 Create .nimautolink files to couple a LOCAL SYNC ROOT dir with a REMOTE OFFSYNC ROOT dir.
 """
-from __future__ import print_function
-
 import os
 import re
 import subprocess
@@ -30,7 +28,7 @@ def check_remote_offsync_root_content():
         invalid: /Volumes/home/MYOFFSYNCDOCS/IT/ROUTER/info.txt
         invalid: /Volumes/home/MYOFFSYNCDOCS/IT/ROUTER/   - if empty
     """
-    print('\n> Checking REMOTE OFFSYNC ROOT dir content...')
+    utils.print_msg('\n> Checking REMOTE OFFSYNC ROOT dir content...')
     remote_offsync_root_mount_path = utils.config.get('main', 'remote-offsync-root-mount-path')
 
     # Find all (wrong) files with no "| offsync" in their full path.
@@ -54,11 +52,11 @@ def check_remote_offsync_root_content():
             output += adir
 
     if output:
-        utils.exit_with_error_msg('ERROR The following files/dirs are not marked as offsync nor nested in a '
+        utils.exit_with_error_msg('The following files/dirs are not marked as offsync nor nested in a '
             'offsync dir. Remove them to keep a mirrored structure between REMOTE OFFSYNC ROOT and '
             'LOCAL SYNC ROOT:\n{}'.format(output))
 
-    print('The content is OK')
+    utils.print_msg('The content is OK')
 
 
 def _find_all_remote_offsync_mounted_files_and_dirs():
@@ -85,13 +83,13 @@ def _create_single_local_sync_nimautolink(path):
 
     # Check if the .nimautolink file already exists.
     if os.path.isfile(nimautolink_path):
-        print('Already OK')
+        utils.print_msg('Already OK')
         return
 
     # Ensure all the parents dirs of .nimautolink already exist in the the SYNC dir.
     parent_dir = os.path.dirname(nimautolink_path)
     if not os.path.isdir(parent_dir):
-        utils.exit_with_error_msg('ERROR {} does not exist. Was this path renamed?'.format(parent_dir))
+        utils.exit_with_error_msg('{} does not exist. Was this path renamed?'.format(parent_dir))
 
     answer = input('Create {} [y/n*]? '.format(nimautolink_path))
     if answer == 'y':
@@ -105,14 +103,14 @@ def create_all_local_sync_nimautolinks():
     For each of them, create (or ensure it already exists) the matching local sync .nimautolink file in the
     LOCAL SYNC ROOT dir.
     """
-    print('\n> Creating all local sync {} files...'.format(utils.NIMAUTOLINK_EXT))
+    utils.print_msg('\n> Creating all local sync {} files...'.format(utils.NIMAUTOLINK_EXT))
     remote_offsync_mounted_paths = _find_all_remote_offsync_mounted_files_and_dirs()
 
     for remote_offsync_mounted_path in remote_offsync_mounted_paths.splitlines():
         if not remote_offsync_mounted_path:
             continue
         remote_offsync_mounted_path = remote_offsync_mounted_path.strip()
-        print('> Found: {}'.format(remote_offsync_mounted_path))
+        utils.print_msg('> Found: {}'.format(remote_offsync_mounted_path))
         _create_single_local_sync_nimautolink(remote_offsync_mounted_path)
 
 
@@ -127,24 +125,24 @@ def check_all_local_sync_nimautolinks():
     Ensure that all the local sync .nimautolink files in the LOCAL SYNC ROOT dir have a match in
     the REMOTE OFFSYNC ROOT dir.
     """
-    print('\n> Ensuring all existing local sync {} files point to existing remote offsync targets...'.format(
+    utils.print_msg('\n> Ensuring all existing local sync {} files point to existing remote offsync targets...'.format(
         utils.NIMAUTOLINK_EXT))
     local_sync_nimautolinks_paths = _find_all_local_sync_nimautolink_files()
     for local_sync_nimautolinks_path in local_sync_nimautolinks_paths.splitlines():
         if not local_sync_nimautolinks_path:
             continue
         local_sync_nimautolinks_path = local_sync_nimautolinks_path.strip()
-        print('> Found: {}'.format(local_sync_nimautolinks_path))
+        utils.print_msg('> Found: {}'.format(local_sync_nimautolinks_path))
 
         remote_offsync_path = utils.from_local_sync_nimautolink_to_remote_offsync_path(local_sync_nimautolinks_path)
         if not os.path.exists(remote_offsync_path):
             _delete_single_local_sync_nimautolink(local_sync_nimautolinks_path)
-        print('OK')
+        utils.print_msg('OK')
 
 
 if __name__ == '__main__':
-    print('NIMAUTOLINKS CREATOR')
-    print('====================')
+    utils.print_msg('NIMAUTOLINKS CREATOR')
+    utils.print_msg('====================')
 
     utils.mount_remote_offsync_root()
     check_remote_offsync_root_content()
@@ -152,5 +150,5 @@ if __name__ == '__main__':
     create_all_local_sync_nimautolinks()
     check_all_local_sync_nimautolinks()
 
-    print('\nNo errors - DONE')
+    utils.print_msg('\nNo errors - DONE')
     sys.exit(0)

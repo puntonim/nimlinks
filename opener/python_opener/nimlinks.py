@@ -15,8 +15,6 @@ Development:
  - code compatible with Python 2 and 3 so that it works in old and new macOS versions.
  - do not use any external library, so that no virtualenv is necessary. This way scripts work in any vanilla macOS.
 """
-from __future__ import print_function
-
 import os
 import sys
 import subprocess
@@ -28,14 +26,14 @@ def parse_args():
     try:
         nimlink_file = os.path.abspath(sys.argv[1])
     except IndexError:
-        utils.exit_with_error_msg('Please provide an argument (a {} or {} file)'.format(utils.NIMLINK_EXT, utils.NIMAUTOLINK_EXT), file=sys.stderr)
+        utils.exit_with_error_msg('Please provide an argument (a {} or {} file)'.format(utils.NIMLINK_EXT, utils.NIMAUTOLINK_EXT))
 
     # Ensure link_file is a valid file.
     if not (nimlink_file.endswith(utils.NIMLINK_EXT) or nimlink_file.endswith(utils.NIMAUTOLINK_EXT)):
-        utils.exit_with_error_msg('Please provide a {} or {} file as argument'.format(utils.NIMLINK_EXT, utils.NIMAUTOLINK_EXT), file=sys.stderr)
+        utils.exit_with_error_msg('Please provide a {} or {} file as argument'.format(utils.NIMLINK_EXT, utils.NIMAUTOLINK_EXT))
 
     if not os.path.isfile(nimlink_file):
-        utils.exit_with_error_msg('Please provide a valid {} or {} file as argument'.format(utils.NIMLINK_EXT, utils.NIMAUTOLINK_EXT), file=sys.stderr)
+        utils.exit_with_error_msg('Please provide a valid {} or {} file as argument'.format(utils.NIMLINK_EXT, utils.NIMAUTOLINK_EXT))
 
     return nimlink_file
 
@@ -64,7 +62,7 @@ class LinksHandler(object):
             cmd = utils.config.get('main', 'open-local-dir-cmd')
         else:
             utils.exit_with_error_msg('The link points to {} which is not a valid local file/dir'.format(path))
-        print('> $' + cmd.format(path))
+        utils.print_msg('> $' + cmd.format(path))
         subprocess.check_call(cmd.format(path), shell=True)
 
 
@@ -96,12 +94,12 @@ class _NimAutoLinkHandler(LinksHandler):
 
 
 if __name__ == '__main__':
-    print('NIMLINKS OPENER')
-    print('===============')
+    utils.print_msg('NIMLINKS OPENER')
+    utils.print_msg('===============')
 
     local_sync_nimlink_file = parse_args()
     handler = LinksHandler.create_handler(local_sync_nimlink_file)
     handler.handle()
 
-    print('No errors - DONE')
+    utils.print_msg('No errors - DONE')
     sys.exit(0)
