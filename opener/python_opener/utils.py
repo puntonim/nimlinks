@@ -1,5 +1,5 @@
 """
-Utils shared between `python_opener` and `python_nimautolinks_creator`.
+Utils shared between `python_opener`, `nimautolinks_creator` and `nimlinks_creator`.
 """
 from __future__ import print_function
 
@@ -61,7 +61,7 @@ def exit_with_error_msg(msg):
 
 
 def mount_remote_offsync_root():
-    mount_path = config.get('main', 'remote-offsync-root-mount-path')
+    mount_path = config.get('main', 'remote-mount-path')
     if os.path.isdir(mount_path):
         return
 

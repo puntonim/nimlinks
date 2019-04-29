@@ -2,18 +2,18 @@
 """
 Open .nimlink and .nimautolink files in macOS.
 
-.nimlink files are text files containing a path that points to a target: a local or remote file/dir. They are
-created manually.
+.nimlink files are text files containing a path that points to a target: a *local* or *remote* file/dir. They are
+created via the Services context menu in macOS.
 .nimautolink files are empty files. Their own absolute path points to a mirrored target in a remote offsync root. They
-are created automatically with `python_nimautolinks_creator`.
+are created automatically with `nimautolinks_creator`.
 
-Every remote target is nested in a remote offsync root.
+All *remote* targets are nested in a remote offsync root.
 The remote offsync root is configured in the config file and it is unique (it is a file server, like a NAS). It can be
 accessed in 2 ways: via LAN (using AFP or SMB) and via WAN (using WebDav).
 
 Development:
  - code compatible with Python 2 and 3 so that it works in old and new macOS versions.
- - do not use any external library, so that no virtualenv is necessary. This way the script works in any vanilla macOS.
+ - do not use any external library, so that no virtualenv is necessary. This way scripts work in any vanilla macOS.
 """
 from __future__ import print_function
 
@@ -71,7 +71,6 @@ class LinksHandler(object):
 class _NimLinkHandler(LinksHandler):
     """
     Handle .nimlink files in macOS.
-    TODO
     """
     def handle(self):
         parser = utils.ConfigParserLazy(self.path)
@@ -89,7 +88,6 @@ class _NimLinkHandler(LinksHandler):
 class _NimAutoLinkHandler(LinksHandler):
     """
     Handle .nimautolink files in macOS.
-    TODO
     """
     def handle(self):
         utils.mount_remote_offsync_root()

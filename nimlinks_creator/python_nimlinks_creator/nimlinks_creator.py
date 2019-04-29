@@ -1,6 +1,7 @@
 #! /usr/bin/python
 """
 Create .nimlink files.
+See the format in nimlink.template.
 """
 from __future__ import print_function
 

@@ -1,7 +1,6 @@
 #! /usr/bin/python
 """
 Create .nimautolink files to couple a LOCAL SYNC ROOT dir with a REMOTE OFFSYNC ROOT dir.
-TODO
 """
 from __future__ import print_function
 
@@ -33,12 +32,13 @@ def check_remote_offsync_root_content():
     """
     print('\n> Checking REMOTE OFFSYNC ROOT dir content...')
     remote_offsync_root_mount_path = utils.config.get('main', 'remote-offsync-root-mount-path')
-    # Find all files with no "| offsync" in their full path.
+
+    # Find all (wrong) files with no "| offsync" in their full path.
     cmd = 'find "{}" -type f \! -path "* | offsync*" \! -name "*.DS_Store"'
     output = subprocess.check_output(cmd.format(remote_offsync_root_mount_path), shell=True)
     output = output
 
-    # Find all dirs:
+    # Find all (wrong) dirs:
     #  - with no "| offsync" in their full path
     #  - and with no sub dirs
     #  - and with no offsync file.
@@ -62,6 +62,9 @@ def check_remote_offsync_root_content():
 
 
 def _find_all_remote_offsync_mounted_files_and_dirs():
+    """
+    List all "* | offsync" files and dirs in the REMOTE OFFSYNC ROOT.
+    """
     remote_offsync_root_mount_path = utils.config.get('main', 'remote-offsync-root-mount-path')
     output1 = subprocess.check_output(FIND_ALL_REMOTE_OFFSYNC_DIRS_CMD.format(remote_offsync_root_mount_path), shell=True)
     output2 = subprocess.check_output(FIND_ALL_REMOTE_OFFSYNC_FILES_CMD.format(remote_offsync_root_mount_path), shell=True)
@@ -69,6 +72,9 @@ def _find_all_remote_offsync_mounted_files_and_dirs():
 
 
 def _find_all_local_sync_nimautolink_files():
+    """
+    Find all .nimautolink files in the LOCAL SYNC ROOT.
+    """
     local_sync_root_path = utils.config.get('main', 'local-sync-root-path')
     output = subprocess.check_output(FIND_ALL_LOCAL_SYNC_NIMAUTOLINK_FILES_CMD.format(local_sync_root_path), shell=True)
     return output.strip()
@@ -96,7 +102,7 @@ def _create_single_local_sync_nimautolink(path):
 def create_all_local_sync_nimautolinks():
     """
     Find all "* | offsync" dirs/files in the REMOTE OFFSYNC ROOT dir.
-    For each of them, create (or ensure it already exists) a local sync .nimautolink file in the
+    For each of them, create (or ensure it already exists) the matching local sync .nimautolink file in the
     LOCAL SYNC ROOT dir.
     """
     print('\n> Creating all local sync {} files...'.format(utils.NIMAUTOLINK_EXT))
