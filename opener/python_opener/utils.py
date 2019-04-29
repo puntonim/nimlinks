@@ -24,7 +24,7 @@ class ConfigParserLazy(object):
     def _get_config_parser(self):
         if not self.path:
             # Then get config.ini.
-            dirpath = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
+            dirpath = os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
             self.path = os.path.join(dirpath, 'config.ini')
         config_parser = ConfigParser()
         try:
