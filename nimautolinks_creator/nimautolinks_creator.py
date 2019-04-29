@@ -11,7 +11,7 @@ import sys
 if hasattr(__builtins__, 'raw_input'):
     input = raw_input
 
-sys.path.append(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'opener', 'python_opener'))
+sys.path.append(os.path.join(os.path.dirname(os.path.dirname(os.path.realpath(__file__))), 'opener', 'python_opener'))
 import utils  # From python_opener.
 
 

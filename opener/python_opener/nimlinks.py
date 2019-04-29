@@ -1,5 +1,4 @@
 #! /usr/bin/python
-
 """
 Open .nimlink and .nimautolink files in macOS.
 
@@ -29,17 +28,14 @@ def parse_args():
     try:
         nimlink_file = os.path.abspath(sys.argv[1])
     except IndexError:
-        print('Please provide an argument (a {} or {} file)'.format(utils.NIMLINK_EXT, utils.NIMAUTOLINK_EXT), file=sys.stderr)
-        sys.exit(1)
+        utils.exit_with_error_msg('Please provide an argument (a {} or {} file)'.format(utils.NIMLINK_EXT, utils.NIMAUTOLINK_EXT), file=sys.stderr)
 
     # Ensure link_file is a valid file.
     if not (nimlink_file.endswith(utils.NIMLINK_EXT) or nimlink_file.endswith(utils.NIMAUTOLINK_EXT)):
-        print('Please provide a {} or {} file as argument'.format(utils.NIMLINK_EXT, utils.NIMAUTOLINK_EXT), file=sys.stderr)
-        sys.exit(1)
+        utils.exit_with_error_msg('Please provide a {} or {} file as argument'.format(utils.NIMLINK_EXT, utils.NIMAUTOLINK_EXT), file=sys.stderr)
 
     if not os.path.isfile(nimlink_file):
-        print('Please provide a valid {} or {} file as argument'.format(utils.NIMLINK_EXT, utils.NIMAUTOLINK_EXT), file=sys.stderr)
-        sys.exit(1)
+        utils.exit_with_error_msg('Please provide a valid {} or {} file as argument'.format(utils.NIMLINK_EXT, utils.NIMAUTOLINK_EXT), file=sys.stderr)
 
     return nimlink_file
 
