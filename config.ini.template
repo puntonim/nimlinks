@@ -1,9 +1,10 @@
 [main]
-remote-offsync-root-mount-path = /Volumes/home/MYOFFSYNCDOCS
+remote-mount-path = /Volumes/home
+remote-offsync-root-mount-path = %(remote-mount-path)s/MYOFFSYNCDOCS
 local-sync-root-path = /Users/me/SynologyDrive/DOCUMENTS
 # open   -R, --reveal      Selects in the Finder instead of opening.
 open-local-file-cmd = open -R "{}"
-open-local-dir-cmd = open "{}"
+open-local-dir-cmd = open -R "{}"
 
 
 [remote-lan]

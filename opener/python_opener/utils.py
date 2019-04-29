@@ -90,8 +90,7 @@ def from_local_sync_nimautolink_to_remote_offsync_path(nimautolink_path):
 
     # Ensure the .nimautolink file is placed in the right dir.
     if not nimautolink_path.startswith(local_sync_root_path):
-        exit_with_error_msg('This {} file is not placed in the configured local-sync-root-path: {}'.format(
-            nimautolink_path, local_sync_root_path))
+        exit_with_error_msg('This file is not placed in the configured local-sync-root-path: {}'.format(local_sync_root_path))
 
     relative_path = nimautolink_path[len(local_sync_root_path):]
     # Remove initial /.

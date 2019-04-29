@@ -55,15 +55,17 @@ class LinksHandler(object):
             return _NimAutoLinkHandler(path)
 
     @staticmethod
-    def _open_local_file(local_path):
+    def _open_local_file(path):
+        path = os.path.expanduser(path)
         # Ensure path is a valid file/dir.
-        if os.path.isfile(local_path):
+        if os.path.isfile(path):
             cmd = utils.config.get('main', 'open-local-file-cmd')
-        elif os.path.isdir(local_path):
+        elif os.path.isdir(path):
             cmd = utils.config.get('main', 'open-local-dir-cmd')
         else:
-            utils.exit_with_error_msg('The link points to {} which is not a valid local file/dir'.format(local_path))
-        subprocess.check_call(cmd.format(local_path), shell=True)
+            utils.exit_with_error_msg('The link points to {} which is not a valid local file/dir'.format(path))
+        print('> $' + cmd.format(path))
+        subprocess.check_call(cmd.format(path), shell=True)
 
 
 class _NimLinkHandler(LinksHandler):

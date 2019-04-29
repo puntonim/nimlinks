@@ -1,3 +1,4 @@
+#! /usr/bin/python
 """
 Create .nimautolink files to couple a LOCAL SYNC ROOT dir with a REMOTE OFFSYNC ROOT dir.
 TODO
