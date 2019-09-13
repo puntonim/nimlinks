@@ -11,8 +11,9 @@ file servers:
 ## Setup
 1. Create some symbolic links in your `/usr/local/bin`:
 ```bash
-$ ln -s ./nimlinks/opener/python_opener/nimlinks.py /usr/local/bin/nimlinks
-$ ln -s ./nimlinks/nimlinks_creator/python_nimlinks_creator/nimlinks_creator.py /usr/local/bin/nimlinks_creator
+$ cd nimlinks
+$ ln -s $(pwd)/opener/python_opener/nimlinks.py /usr/local/bin/nimlinks
+$ ln -s $(pwd)/nimlinks_creator/python_nimlinks_creator/nimlinks_creator.py /usr/local/bin/nimlinks_creator
 ```
 2. Create `config.ini` (see `config.ini.template`)
 3. In macOS set `opener/macos_app_opener/nimlinks.app` as default app for opening `.nimlink` and
